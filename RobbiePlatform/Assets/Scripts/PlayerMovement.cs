@@ -71,7 +71,13 @@ public class PlayerMovement : MonoBehaviour
     }
     private void PhysicsChech()     //物理環境判斷
     {
-        if (coll.IsTouchingLayers(groundLayer))
+        /*Vector2 pos = transform.position;                   //紀錄位置
+        Vector2 offset = new Vector2(-footOffset, 0f);      //左側偏移
+        
+        RaycastHit2D leftCheck = Physics2D.Raycast(pos + offset, Vector2.down, groundDistance, groundLayer);    //(遊戲角色+偏移位置，方向向下，距離，圖層)
+        Debug.DrawRay(pos + offset, Vector2.down, Color.red, 0.2f); //規劃射線*/
+
+        if (leftCheck)
             isOnGround = true;
         else isOnGround = false;
     }
@@ -142,4 +148,7 @@ public class PlayerMovement : MonoBehaviour
         coll.size = colliderStandSize;
         coll.offset = colliderStandOffset;
     }
+
+
+
 }
