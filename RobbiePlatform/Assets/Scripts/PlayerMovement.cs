@@ -77,6 +77,9 @@ public class PlayerMovement : MonoBehaviour
         RaycastHit2D leftCheck = Physics2D.Raycast(pos + offset, Vector2.down, groundDistance, groundLayer);    //(遊戲角色+偏移位置，方向向下，距離，圖層)
         Debug.DrawRay(pos + offset, Vector2.down, Color.red, 0.2f); //規劃射線*/
 
+        RaycastHit2D leftCheck = Raycast(new Vector2(-footOffset, 0f), Vector2.down, groundDistance, groundLayer);
+        RaycastHit2D rightCheck = Raycast(new Vector2(footOffset, 0f), Vector2.down, groundDistance, groundLayer); 
+
         if (leftCheck)
             isOnGround = true;
         else isOnGround = false;
@@ -148,7 +151,16 @@ public class PlayerMovement : MonoBehaviour
         coll.size = colliderStandSize;
         coll.offset = colliderStandOffset;
     }
+    RaycastHit2D Raycast(Vector2 offset, Vector2 rayDiraction, float length, LayerMask layer)       //(位移，方向、浮點型的變量、圖層)
+    {
+        Vector2 pos = transform.position;
 
+        RaycastHit2D hit = Physics2D.Raycast(pos + offset, rayDiraction, length, layer);
+
+        Debug.DrawRay(pos + offset, rayDiraction * length);
+
+        return hit;
+    }
 
 
 }
