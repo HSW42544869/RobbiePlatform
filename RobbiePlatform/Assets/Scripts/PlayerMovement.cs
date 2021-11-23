@@ -24,11 +24,19 @@ public class PlayerMovement : MonoBehaviour
     public bool isCrouch;   //下蹲狀態
     public bool isOnGround; //在地面
     public bool isJump;     //在跳躍過程中
+    public bool isHeadBlocked;  //判斷頭頂
+    public bool isHanging;  //判斷是否懸掛
+
 
     [Header("環境檢測")]
     public float footOffset = 0.4f;     //射線寬度
     public float headClearance = 0.5f;  //頭頂檢測距離
     public float groundDistance = 0.2f; //檢測與地面之間距離
+    float playerHeight;                 //頭頂位置
+    public float eyeHeight = 1.5f;      //眼睛高度射線
+    public float grabDistance = 0.6f;   //距離面前牆壁
+    public float reachOffset = 0.7f;    
+
     public LayerMask groundLayer;
 
     float xVelocity;
@@ -50,6 +58,8 @@ public class PlayerMovement : MonoBehaviour
         rb = GetComponent<Rigidbody2D>();
         coll = GetComponent<BoxCollider2D>();
 
+
+        playerHeight = coll.size.y; //玩家高度 = 剛體高度
         colliderStandSize = coll.size;          //獲取站立的尺寸
         colliderStandOffset = coll.offset;      //獲取站立位置
         colliderCrouchSize = new Vector2(coll.size.x, coll.size.y / 2f);    //設置下蹲剛體尺寸
@@ -80,15 +90,28 @@ public class PlayerMovement : MonoBehaviour
         RaycastHit2D leftCheck = Raycast(new Vector2(-footOffset, 0f), Vector2.down, groundDistance, groundLayer);
         RaycastHit2D rightCheck = Raycast(new Vector2(footOffset, 0f), Vector2.down, groundDistance, groundLayer); 
 
-        if (leftCheck)
+        if (leftCheck || rightCheck)
             isOnGround = true;
         else isOnGround = false;
+
+        RaycastHit2D headCheck = Raycast(new Vector2(0f, coll.size.y), Vector2.up, headClearance, groundLayer);
+
+        if (headCheck)
+            isHeadBlocked = true;
+        else isHeadBlocked = false;
+
+        float direction = transform.localScale.x;       //左右懸掛射線方向(但float只是一個數值)
+        Vector2 grabDir = new Vector2(direction, 0f);   //將數值改變成方向
+
+        RaycastHit2D blockedCheck = Raycast(new Vector2(footOffset * direction, playerHeight), grabDir, grabDistance, groundLayer);
+        RaycastHit2D wallCheck = Raycast(new Vector2(footOffset * direction, eyeHeight), grabDir, groundDistance,groundLayer);
+        RaycastHit2D ledgeCheck = Raycast(new Vector2(reachOffset * direction, playerHeight), Vector2.down, grabDistance, groundLayer);
     }
     void GroundMovement()
     {
         if (crouchHeld && !isCrouch && isOnGround)
             Crouch();
-        else if (!crouchHeld && isCrouch)    //自動起立
+        else if (!crouchHeld && isCrouch && !isHeadBlocked)    //自動起立
             StandUp();
         else if (!isOnGround && isCrouch)
             StandUp();
@@ -157,7 +180,9 @@ public class PlayerMovement : MonoBehaviour
 
         RaycastHit2D hit = Physics2D.Raycast(pos + offset, rayDiraction, length, layer);
 
-        Debug.DrawRay(pos + offset, rayDiraction * length);
+        Color color = hit ? Color.red : Color.green;
+
+        Debug.DrawRay(pos + offset, rayDiraction * length,color);
 
         return hit;
     }
