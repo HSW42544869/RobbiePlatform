@@ -12,10 +12,12 @@ public class PlayerMovement : MonoBehaviour
     public float crouchSpeedDivisor = 3f;   //下蹲時移動數度
 
     [Header("跳躍參數")]
-    private float jumpForce = 6.3f;         //基本跳躍參數
-    private float jumpHoldForce = 1.9f;     //長按跳躍加乘參數
-    private float jumpHoldDuration = 0.1f;  //常按按鍵可按時間
-    private float crouchJumpBoost = 2.5f;   //當下蹲時額外跳躍加乘
+    public float jumpForce = 6.3f;         //基本跳躍參數
+    public float jumpHoldForce = 1.9f;     //長按跳躍加乘參數
+    public float jumpHoldDuration = 0.1f;  //常按按鍵可按時間
+    public float crouchJumpBoost = 2.5f;   //當下蹲時額外跳躍加乘
+    public float hangingJumpForce = 15f;    //懸掛時的而外跳躍
+
 
     float jumpTime;
 
@@ -34,8 +36,8 @@ public class PlayerMovement : MonoBehaviour
     public float groundDistance = 0.2f; //檢測與地面之間距離
     float playerHeight;                 //頭頂位置
     public float eyeHeight = 1.5f;      //眼睛高度射線
-    public float grabDistance = 0.6f;   //距離面前牆壁
-    public float reachOffset = 0.7f;    
+    public float grabDistance = 0.4f;   //距離面前牆壁
+    public float reachOffset = 0.7f;
 
     public LayerMask groundLayer;
 
@@ -44,6 +46,7 @@ public class PlayerMovement : MonoBehaviour
     bool jumpPressed;
     bool jumpHeld;
     bool crouchHeld;
+    bool crouchPressed;
 
     //碰撞體尺寸 
     Vector2 colliderStandSize;      //站立的尺寸
@@ -72,6 +75,8 @@ public class PlayerMovement : MonoBehaviour
         jumpPressed = Input.GetButtonDown("Jump");
         jumpHeld = Input.GetButton("Jump");
         crouchHeld = Input.GetButton("Crouch");
+        crouchPressed = Input.GetButtonDown("Crouch");
+
     }
     private void FixedUpdate()
     {
@@ -88,7 +93,7 @@ public class PlayerMovement : MonoBehaviour
         Debug.DrawRay(pos + offset, Vector2.down, Color.red, 0.2f); //規劃射線*/
 
         RaycastHit2D leftCheck = Raycast(new Vector2(-footOffset, 0f), Vector2.down, groundDistance, groundLayer);
-        RaycastHit2D rightCheck = Raycast(new Vector2(footOffset, 0f), Vector2.down, groundDistance, groundLayer); 
+        RaycastHit2D rightCheck = Raycast(new Vector2(footOffset, 0f), Vector2.down, groundDistance, groundLayer);
 
         if (leftCheck || rightCheck)
             isOnGround = true;
@@ -104,11 +109,28 @@ public class PlayerMovement : MonoBehaviour
         Vector2 grabDir = new Vector2(direction, 0f);   //將數值改變成方向
 
         RaycastHit2D blockedCheck = Raycast(new Vector2(footOffset * direction, playerHeight), grabDir, grabDistance, groundLayer);
-        RaycastHit2D wallCheck = Raycast(new Vector2(footOffset * direction, eyeHeight), grabDir, groundDistance,groundLayer);
+        RaycastHit2D wallCheck = Raycast(new Vector2(footOffset * direction, eyeHeight), grabDir, groundDistance * 3, groundLayer);
         RaycastHit2D ledgeCheck = Raycast(new Vector2(reachOffset * direction, playerHeight), Vector2.down, grabDistance, groundLayer);
+
+        if (!isOnGround && rb.velocity.y < 0f && ledgeCheck && wallCheck && !blockedCheck)
+        {
+            Vector3 pos = transform.position;   //定義一個位置
+
+            pos.x += (wallCheck.distance - 0.05f) * direction;    //新曾玩家懸掛時加上牆面的距離
+
+            pos.y -= ledgeCheck.distance;           //減去玩家懸掛時頭部高出的距離
+
+            transform.position = pos;
+
+            rb.bodyType = RigidbodyType2D.Static;
+            isHanging = true;
+        }
     }
     void GroundMovement()
     {
+        if (isHanging)  //懸掛時重複執行以免翻轉
+            return;
+
         if (crouchHeld && !isCrouch && isOnGround)
             Crouch();
         else if (!crouchHeld && isCrouch && !isHeadBlocked)    //自動起立
@@ -128,10 +150,26 @@ public class PlayerMovement : MonoBehaviour
 
     void MidAirMovement()   //半空中判斷
     {
-        if (jumpPressed && isOnGround && !isJump)
+        if (isHanging)
+        {
+            if (jumpPressed)    //懸掛後恢復原回到地面(且按下單次跳躍)
+            {
+                rb.bodyType = RigidbodyType2D.Dynamic;
+                rb.velocity = new Vector2(rb.velocity.x, hangingJumpForce);
+                isHanging = false;
+            }
+            if (crouchPressed)
+            {
+                rb.bodyType = RigidbodyType2D.Dynamic;
+
+                isHanging = false;
+            }
+        }
+
+        if (jumpPressed && isOnGround && !isJump && !isHeadBlocked)
         {
 
-            if (isCrouch & isOnGround)
+            if (isCrouch & isOnGround )
             {
                 StandUp();
                 rb.AddForce(new Vector2(0f, jumpForce), ForceMode2D.Impulse);
@@ -157,7 +195,7 @@ public class PlayerMovement : MonoBehaviour
     {
         if (xVelocity < 0)
             transform.localScale = new Vector2(-1, 1);  //玩家面相朝左
-        else
+        else if (xVelocity > 0)
             transform.localScale = new Vector2(1, 1);   //玩家面相朝右
     }
     void Crouch()
@@ -182,7 +220,7 @@ public class PlayerMovement : MonoBehaviour
 
         Color color = hit ? Color.red : Color.green;
 
-        Debug.DrawRay(pos + offset, rayDiraction * length,color);
+        Debug.DrawRay(pos + offset, rayDiraction * length, color);
 
         return hit;
     }
