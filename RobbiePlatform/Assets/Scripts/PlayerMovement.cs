@@ -169,7 +169,7 @@ public class PlayerMovement : MonoBehaviour
         if (jumpPressed && isOnGround && !isJump && !isHeadBlocked)
         {
 
-            if (isCrouch & isOnGround )
+            if (isCrouch)
             {
                 StandUp();
                 rb.AddForce(new Vector2(0f, jumpForce), ForceMode2D.Impulse);
