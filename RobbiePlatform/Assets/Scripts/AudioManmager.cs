@@ -11,18 +11,19 @@ public class AudioManmager : MonoBehaviour
     public AudioClip ambientClip;
     public AudioClip musicClip;
 
-    [Header("FV音效")]
+    [Header("FX音效")]
     public AudioClip deathFXClip;
+    [Header("獲得寶珠的音效")]public AudioClip orbFXClip;
 
     [Header("玩家音效")]
     public AudioClip[] walkStepClips;
     public AudioClip[] crouchStepClips;
-    public AudioClip jumpClip;
-    public AudioClip deathClip;
+    [Header("跳躍")]public AudioClip jumpClip;
+    [Header("死亡")] public AudioClip deathClip;
 
-    public AudioClip jumpVoiceClip;
-    [Header("死亡時人物的聲音")]
-    public AudioClip deathVoiceClip;    
+    [Header("跳躍聲音")]public AudioClip jumpVoiceClip;
+    [Header("死亡時人物的聲音")] public AudioClip deathVoiceClip;
+    [Header("寶珠收起來的音效")] public AudioClip orbVoiceClip;
 
 
     [Header("環境音效")] AudioSource ambientSource; 
@@ -33,6 +34,12 @@ public class AudioManmager : MonoBehaviour
 
     private void Awake()
     {
+        // 如果場上current != 0
+        if (current != null)
+        {
+            Destroy(gameObject);
+            return;
+        }
         current = this;
 
         // 使當前這個物件無法被刪除
@@ -107,13 +114,25 @@ public class AudioManmager : MonoBehaviour
     /// </summary>
     public static void PlayDeathAudio()
     {
+        // 玩家死亡遊戲音效
         current.playerSource.clip = current.deathClip;
         current.playerSource.Play();
-
-        current.voiceSource.clip = current.deathClip;
+        // 玩家死亡的叫聲
+        current.voiceSource.clip = current.deathVoiceClip;
         current.voiceSource.Play();
-
+        // 收集的寶珠在死亡後散落的聲音
         current.fxSource.clip = current.deathFXClip;
         current.fxSource.Play();
+    }
+    /// <summary>
+    /// 寶珠獲取音效
+    /// </summary>
+    public static void PlayOrbAudio()
+    {
+        current.fxSource.clip = current.orbFXClip;
+        current.fxSource.Play();
+
+        current.voiceSource.clip = current.orbVoiceClip;
+        current.voiceSource.Play();
     }
 }

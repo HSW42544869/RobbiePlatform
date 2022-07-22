@@ -69,7 +69,7 @@ public class PlayerMovement : MonoBehaviour
         colliderCrouchSize = new Vector2(coll.size.x, coll.size.y / 2f);        //設置下蹲剛體尺寸
         colliderCrouchOffset = new Vector2(coll.offset.x, coll.offset.y / 2f);  //設置下蹲位置
     }
-
+    
     // Update is called once per frame
     void Update()
     {
@@ -77,7 +77,6 @@ public class PlayerMovement : MonoBehaviour
         jumpHeld = Input.GetButton("Jump");
         crouchHeld = Input.GetButton("Crouch");
         crouchPressed = Input.GetButtonDown("Crouch");
-
     }
     private void FixedUpdate()
     {
