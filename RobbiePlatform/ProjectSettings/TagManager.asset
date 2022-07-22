@@ -15,7 +15,7 @@ TagManager:
   - 
   - Ground
   - Player
-  - 
+  - Traps
   - 
   - 
   - 
@@ -44,11 +44,11 @@ TagManager:
   - name: Background
     uniqueID: 2862000589
     locked: 0
-  - name: Platforms
-    uniqueID: 160318761
-    locked: 0
   - name: Player
     uniqueID: 2414957685
+    locked: 0
+  - name: Platforms
+    uniqueID: 160318761
     locked: 0
   - name: Foreground
     uniqueID: 3476826615
